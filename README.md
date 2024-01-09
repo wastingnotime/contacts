@@ -22,10 +22,10 @@ docker compose build
 # browsing
 
 * main app
-http://localhost:8080
+http://contacts.codingzen.org
 
 * accessing SEQ
-http://localhost:5341
+http://contacts.codingzen.org:5341
 
 * accessing mongodb via client
-mongodb://localhost:27017/
+mongodb://contacts.codingzen.org:27017/
