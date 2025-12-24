@@ -24,7 +24,11 @@ jobs:
         go-version: '1.25'
 
     - name: build
-      run: go build -v ./...
+      run: |
+        cd apps/api/ && \
+        go build -v ./...
 
     - name: test
-      run: go test -v ./...
+      run: |
+        cd apps/api/ && \
+        go test -v ./...
