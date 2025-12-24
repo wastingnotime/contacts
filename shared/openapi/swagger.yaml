@@ -1,0 +1,143 @@
+openapi: 3.0.0
+info:
+  description: This is a sample server to support some essays
+  version: "1.0.0"
+  title: phone contacts
+  contact:
+    email: hriccio@wastingnotime.org
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/wastingnotime/contacts/1.0.0
+tags:
+  - name: open
+    description: Open crud operations for contact resource
+paths:
+  /contacts:
+    get:
+      tags:
+        - open
+      summary: get all contacts
+      operationId: getAllContacts
+      description: Returns all contacts available in the system 
+      responses:
+        '200':
+          description: list of contacts available in the system 
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
+    post:
+      tags:
+        - open
+      summary: adds a new contact
+      operationId: addContact
+      description: Adds an item to contact collection
+      responses:
+        '201':
+          description: contact created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing contact already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contact'
+        description: Contact object that should be added
+  /contacts/{contactId}:
+    get:
+      tags:
+        - open
+      summary: Get contact by ID
+      operationId: getContactById
+      description: Returns a single contact
+      parameters:
+        - in: path
+          name: contactId
+          description: ID of contact to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: a contact matching given id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          description: bad input parameter
+    put:
+      tags:
+        - open
+      summary: Update an existing contact
+      operationId: updateContactById
+      description: Update an item to contact collection
+      parameters:
+        - in: path
+          name: contactId
+          description: ID of contact to be updated
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: contact updated
+        '400':
+          description: 'invalid input, object invalid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contact'
+        description: Contact object that should be updated
+    delete:
+      tags:
+        - open
+      summary: Delete an existing contact
+      operationId: deleteContact
+      description: delete an item of contact collection
+      parameters:
+        - in: path
+          name: contactId
+          description: ID of contact to be deleted
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: contact deleted
+        '400':
+          description: 'invalid input'
+components:
+  schemas:
+    Contact:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+        - phoneNumber
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        firstName:
+          type: string
+          example: Albert
+        lastName:
+          type: string
+          example: Einsten
+        phoneNumber:
+          type: string
+          example: 551199999-9997

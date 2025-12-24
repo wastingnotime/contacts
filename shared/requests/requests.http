@@ -1,0 +1,61 @@
+# -------------------------------------------------------
+# using extension httpyac due limitations of restclient
+# this script was designed to do a simple test
+# -------------------------------------------------------
+
+@host = http://localhost:8010
+@resource = contacts
+@contentType = application/json
+
+@baseUrl = {{host}}
+@apiUrl = {{baseUrl}}/{{resource}}
+
+###
+# @name getAllContacts
+GET {{apiUrl}}
+Accept: application/json
+
+###
+# @name createContact
+POST {{apiUrl}}
+Accept: {{contentType}}
+Content-Type: {{contentType}}
+
+{
+    "firstName": "First",
+    "lastName": "Last",
+    "phoneNumber": "3333-1111"
+}
+
+{{
+  // post request script (runs after createContact)
+  $global.contactId = response.headers.location.split("/").pop();
+  console.info("contactId =", $global.contactId);
+}}
+
+@contactId = {{$global.contactId}}
+
+###
+# @name getOneContact
+GET {{apiUrl}}/{{contactId}}
+Accept: {{contentType}}
+
+
+###
+# @name updateContact
+PUT {{apiUrl}}/{{contactId}}
+Accept: {{contentType}}
+Content-Type: {{contentType}}
+
+{
+    "id": "{{contactId}}",
+    "firstName": "FirstUpdated",
+    "lastName": "LastUpdated",
+    "phoneNumber": "3333-2222"
+}
+
+###
+# @name deleteContact
+DELETE {{apiUrl}}/{{contactId}}
+
+

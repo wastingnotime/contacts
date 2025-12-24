@@ -1,0 +1,29 @@
+{
+  "name": "contacts-web",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "parcel src/index.html",
+    "build": "parcel build src/index.html",
+    "test": "echo \"Warning: no test specified\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wastingnotime/contacts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wastingnotime/contacts/issues"
+  },
+  "homepage": "https://github.com/wastingnotime/contacts#readme",
+  "dependencies": {
+    "mithril": "^2.3.3",
+    "redux": "^5.0.1",
+    "redux-thunk": "^3.1.0"
+  },
+  "devDependencies": {
+    "parcel": "^2.15.4"
+  }
+}

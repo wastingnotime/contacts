@@ -1,0 +1,10 @@
+# env
+.env
+.env_example
+
+# docker
+.dockerignore
+dockerfile
+
+#git
+.gitignore

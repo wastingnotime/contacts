@@ -1,0 +1,37 @@
+# syntax=docker/dockerfile:1
+FROM golang:1.25-alpine AS build-stage
+
+WORKDIR /app
+
+COPY go.mod /app
+
+RUN go mod download
+
+COPY . /app
+
+RUN go build -o app
+
+
+
+FROM alpine:3.22 AS deploy-stage
+
+ENV MONGO_URI=mongodb://localhost:27017
+ENV MONGO_DB=contacts
+ENV MONGO_COLLECTION=contacts
+ENV ENVIRONMENT=production
+
+# act as doc only
+EXPOSE 8010
+LABEL vendor=wastingnotime.org
+
+# principle of least privilege
+RUN addgroup -S nonroot && adduser -S appuser -G nonroot
+
+WORKDIR /app
+RUN chown appuser .
+
+COPY --from=build-stage /app/app .
+
+USER appuser
+
+ENTRYPOINT ["./app"]

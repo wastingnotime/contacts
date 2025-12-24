@@ -1,0 +1,20 @@
+# node stuff
+node_modules
+npm-debug.log
+
+# parcel
+.parcel-cache
+dist
+
+# git
+.gitignore
+
+# dev
+.jsbeautifyrc
+.jshintrc
+.nvmrc
+.proxyrc
+
+# docker
+dockerfile
+.dockerignore

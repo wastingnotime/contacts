@@ -1,0 +1,30 @@
+name: ci-web-node
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'apps/web/**'
+      - '.github/workflows/ci-web-node.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test

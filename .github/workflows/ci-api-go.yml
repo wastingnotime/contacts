@@ -1,0 +1,30 @@
+name: ci-api-go
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'apps/api/**'
+      - '.github/workflows/ci-api-go.yml'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.25'
+
+    - name: build
+      run: go build -v ./...
+
+    - name: test
+      run: go test -v ./...
