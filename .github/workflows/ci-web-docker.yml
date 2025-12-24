@@ -1,0 +1,126 @@
+name: ci-web-docker
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'apps/web/**'
+      - '.github/workflows/ci-web-docker.yml'
+
+concurrency:
+  group: "ci-web-docker"
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    outputs:
+      ecr_registry: ${{ steps.login-ecr.outputs.registry }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{vars.AWS_DEFAULT_REGION}}
+          role-to-assume: ${{secrets.ECR_ROLE_ARN}}
+          role-session-name: ${{vars.ECR_ROLE_NAME}}
+
+      - name: login to amazon ecr
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{steps.login-ecr.outputs.registry}}/contacts-web
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ github.sha }}
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true # makes "docker buildx" the default
+          driver: docker-container
+
+      - name: build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/web
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    env:
+      SWARM_INSTANCE_ID: ${{ secrets.SWARM_INSTANCE_ID }}
+      IMAGE: ${{needs.build-and-push.outputs.ecr_registry}}/contacts-web:${{ github.sha }}
+      REGION: ${{ vars.AWS_DEFAULT_REGION }}
+
+    steps:
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.ECR_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_DEFAULT_REGION }}
+          role-session-name: ${{ vars.ECR_ROLE_NAME }}
+
+      - name: trigger deploy via ssm
+        id: ssm
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          : "${SWARM_INSTANCE_ID:?missing}"
+          : "${IMAGE:?missing}"
+          : "${REGION:?missing}"
+
+          commands=$(jq -cn \
+            --arg im "$IMAGE" '[
+            "set -e",
+            "echo Running deploy on $(hostname) at $(date)",
+            "cd /opt/wnt/infra || { echo infra repo missing; exit 1; }",
+            "git fetch origin main",
+            "git reset --hard origin/main",
+            "aws ecr get-login-password --region '"${REGION}"' | docker login --username AWS --password-stdin '"${IMAGE%%/*}"'",
+            "CONTACTS_WEB_IMAGE=\"" + $im + "\" docker stack deploy -c swarm/stacks/contacts-web.yml --with-registry-auth contacts-web"
+          ]')
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$SWARM_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "WNT deploy via inline commands" \
+            --parameters "commands=${commands}" \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "command_id=$COMMAND_ID" >> $GITHUB_OUTPUT
+
+      - name: wait for command to finish
+        timeout-minutes: 5
+        run: |
+          aws ssm wait command-executed \
+            --command-id "${{ steps.ssm.outputs.command_id }}" \
+            --instance-id "$SWARM_INSTANCE_ID"
+
+      - name: show command output
+        run: |
+          aws ssm list-command-invocations \
+            --command-id "${{ steps.ssm.outputs.command_id }}" \
+            --details \
+            --output text
