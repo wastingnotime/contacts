@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -71,6 +72,10 @@ func main() {
 	e.GET("/contacts/:id", h.GetContact)
 	e.PUT("/contacts/:id", h.UpdateContact)
 	e.DELETE("/contacts/:id", h.DeleteContact)
+
+	// health/readiness probes for swarm
+	e.GET("/healthz", func(c echo.Context) error { return c.NoContent(http.StatusOK) })
+	e.GET("/readyz", func(c echo.Context) error { return c.NoContent(http.StatusOK) })
 
 	// run
 	e.Logger.Fatal(e.Start(":8010"))

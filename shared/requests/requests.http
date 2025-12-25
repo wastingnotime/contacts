@@ -11,6 +11,12 @@
 @apiUrl = {{baseUrl}}/{{resource}}
 
 ###
+GET {{baseUrl}}/healthz
+
+###
+GET {{baseUrl}}/readyz
+
+###
 # @name getAllContacts
 GET {{apiUrl}}
 Accept: application/json

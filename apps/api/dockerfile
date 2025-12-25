@@ -19,20 +19,20 @@ ENV MONGO_URI=mongodb://localhost:27017
 ENV MONGO_DB=contacts
 ENV ENVIRONMENT=production
 
-RUN apk add --no-cache ca-certificates openssl
+#RUN apk add --no-cache ca-certificates openssl
 
 # act as doc only
 EXPOSE 8010
 LABEL vendor=wastingnotime.org
 
 # principle of least privilege
-#RUN addgroup -S nonroot && adduser -S appuser -G nonroot
+RUN addgroup -S nonroot && adduser -S appuser -G nonroot
 
 WORKDIR /app
-#RUN chown appuser .
+RUN chown appuser .
 
 COPY --from=build-stage /app/app .
 
-#USER appuser
+USER appuser
 
 ENTRYPOINT ["./app"]
