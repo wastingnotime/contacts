@@ -1,10 +1,10 @@
 import m from "mithril"
+import 'construct-ui/lib/index.css'
+import { version } from '../../package.json'
 
 export default {
     view: v => m("main.layout", [
-        m("nav.menu", [
-            m(m.route.Link, { class: 'button', href: "/new" }, "New")
-        ]),
-        m("section", v.children)
+        m("section", v.children),
+        m("footer", version)
     ])
 }
