@@ -72,6 +72,7 @@ jobs:
       SWARM_INSTANCE_ID: ${{ secrets.SWARM_INSTANCE_ID }}
       IMAGE: ${{needs.build-and-push.outputs.ecr_registry}}/contacts-api:${{ github.sha }}
       REGION: ${{ vars.AWS_DEFAULT_REGION }}
+      MONGO_URI: ${{ secrets.MONGO_URI }}
 
     steps:
       - name: configure aws credentials
@@ -89,16 +90,18 @@ jobs:
           : "${SWARM_INSTANCE_ID:?missing}"
           : "${IMAGE:?missing}"
           : "${REGION:?missing}"
+          : "${MONGO_URI:?missing}"
 
           commands=$(jq -cn \
-            --arg im "$IMAGE" '[
+            --arg im "$IMAGE" \
+            --arg mu "$MONGO_URI" '[
             "set -e",
             "echo Running deploy on $(hostname) at $(date)",
             "cd /opt/wnt/infra || { echo infra repo missing; exit 1; }",
             "git fetch origin main",
             "git reset --hard origin/main",
             "aws ecr get-login-password --region '"${REGION}"' | docker login --username AWS --password-stdin '"${IMAGE%%/*}"'",
-            "CONTACTS_API_IMAGE=\"" + $im + "\" docker stack deploy -c swarm/stacks/contacts-api.yml --with-registry-auth contacts-api"
+            "CONTACTS_API_IMAGE=\"" + $im + "\" MONGO_URI=\"" + $mu + "\" docker stack deploy -c swarm/stacks/contacts-api.yml --with-registry-auth contacts-api"
           ]')
 
           COMMAND_ID=$(aws ssm send-command \

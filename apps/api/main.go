@@ -33,7 +33,7 @@ func main() {
 	environment := os.Getenv("ENVIRONMENT")
 	mongoURI := os.Getenv("MONGO_URI")
 	mongoDB := os.Getenv("MONGO_DB")
-	mongoCollection := os.Getenv("MONGO_COLLECTION")
+	mongoCollection := "contacts"
 
 	// api
 	e := echo.New()
